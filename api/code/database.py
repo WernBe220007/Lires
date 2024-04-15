@@ -30,7 +30,7 @@ def create_user(name: str, pref_name: str, disabled: bool):
     
 def get_user_by_id(id: str):
     with Session(engine) as session:
-        statement = select(User).where(User.id == id)
+        statement = select(User).where(User.id == UUID4(id))
         result = session.exec(statement)
         return result.one_or_none()
     
