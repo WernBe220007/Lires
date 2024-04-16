@@ -5,8 +5,12 @@ from typing import Optional
 
 engine = create_engine("postgresql://postgres:postgres@postgres-api/postgres")
 
+def create_db_uid():
+    return str(uuid4())
+
 class User(SQLModel, table=True):
-    id: UUID4 = Field(default_factory=uuid4, primary_key=True)
+    uid: UUID4 = Field(default_factory=uuid4, primary_key=True)
+    id: str = Field(default_factory=create_db_uid, unique=True, index=True)
     name: str
     pref_name: str
     disabled: bool
@@ -30,7 +34,7 @@ def create_user(name: str, pref_name: str, disabled: bool):
     
 def get_user_by_id(id: str):
     with Session(engine) as session:
-        statement = select(User).where(User.id == UUID4(id))
+        statement = select(User).where(User.id == id)
         result = session.exec(statement)
         return result.one_or_none()
     

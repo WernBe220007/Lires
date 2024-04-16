@@ -75,9 +75,9 @@ async def read_users_me(
 
 @app.get("/api/users/me/items/", tags=["users"])
 async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Security(get_current_active_user, scopes=["items"])],
 ):
-    return [{"item_id": "Foo", "owner": current_user.username}]
+    return [{"item_id": "Foo", "owner": current_user.id}]
 
 
 @app.get("/api/")
