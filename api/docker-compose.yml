@@ -4,6 +4,19 @@ services:
             context: .
         ports:
             - 8080:8080
+        environment:
+            ACCESS_TOKEN_EXPIRE_MINUTES: 30
+            SECRET_KEY: 4810eb636b96664a31388d97b47e335c0708c4caf6d0e9fec9355e8b0883d9d8
+            ALGORITHM: HS256
+            ISSUER: https://lires.com/api/token
+            AUDIENCE: https://lires.com/api
+            MS_ISSUER: https://login.microsoftonline.com/88fae967-01b4-42f0-8966-32a990173948/v2.0
+            MS_AUDIENCE: 4f397fa9-b781-443c-8187-30ea6b940bc2
+            MS_CACHE_EXPIRY: 3600
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_SERVER: postgres-api
+            POSTGRES_DB: postgres
         volumes:
             - ./ssl_cert.crt:/code/ssl_cert.crt
             - ./ssl_key.key:/code/ssl_key.key

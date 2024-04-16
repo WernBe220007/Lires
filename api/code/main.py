@@ -7,10 +7,12 @@ from fastapi.security import (
     OAuth2PasswordRequestForm,
     SecurityScopes,
 )
+from fastapi.security.utils import get_authorization_scheme_param
 from jose import JWTError, jwt
 from pydantic import BaseModel, ValidationError
 from token_handler import *
 from database import *
+from config import *
 
 tags_metadata = [
     {
@@ -30,18 +32,22 @@ app = FastAPI(
     summary="LiRes API",
     version="0.0.1",
     license_info={
-        "name": "Undecided",
-        "url": "https://litec.ac.at",
+        "name": "GPL V3",
+        "url": "https://github.com/WernBe220007/Lires/blob/main/LICENSE",
     },
-    docs_url="/api/docs", 
+    docs_url="/api/docs",
     redoc_url=None,
     openapi_url="/api/openapi.json",
-    openapi_tags=tags_metadata
+    openapi_tags=tags_metadata,
 )
+
 
 def on_startup():
     SQLModel.metadata.create_all(engine)
+
+
 app.add_event_handler("startup", on_startup)
+
 
 async def get_current_active_user(
     current_user: Annotated[User, Security(get_current_user, scopes=["me"])],
@@ -50,14 +56,26 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+
 @app.get("/api/token")
 async def login_for_access_token(req: Request) -> Token:
     try:
-        msToken = req.headers["Authorization"]
+        # msToken = req.headers["Authorization"]
+        authorization = req.headers.get("Authorization")
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=401,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
     except KeyError:
-        raise HTTPException(status_code=401, detail="Token is missing")
-    user = authenticate_user(msToken)
-    print(user)
+        raise HTTPException(
+            status_code=401,
+            detail="Token is missing",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    user = authenticate_user(param)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id), "scopes": ["me"]},
@@ -82,4 +100,6 @@ async def read_own_items(
 
 @app.get("/api/")
 async def read_main():
-    return {"msg": "Hello World"}
+    return {
+        "msg": "Hello World",
+    }
