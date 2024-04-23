@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lires/structures/priveleges.dart';
+import 'package:lires/helpers/user_manager.dart';
+import 'package:lires/gui/page/settings.dart';
 
 class ClientNavigation extends StatefulWidget {
-  final privelege = Priveleges.admin;
   const ClientNavigation({super.key});
 
   @override
@@ -11,10 +12,11 @@ class ClientNavigation extends StatefulWidget {
 
 class ClientNavigationState extends State<ClientNavigation> {
   int currentIndex = 0;
+  Priveleges privelege = UserManager.getPrivileged() ?? Priveleges.student;
 
   @override
   void initState() {
-    currentIndex = widget.privelege == Priveleges.student ? 1 : 0;
+    currentIndex = privelege == Priveleges.student ? 1 : 0;
     super.initState();
   }
 
@@ -22,14 +24,14 @@ class ClientNavigationState extends State<ClientNavigation> {
     const Placeholder(),
     const Placeholder(),
     const Placeholder(),
-    const Placeholder(),
+    const Settings(),
     const Placeholder()
   ];
 
   final screensStudnets = [
     const Placeholder(),
     const Placeholder(),
-    const Placeholder(),
+    const Settings(),
   ];
 
   final List<BottomNavigationBarItem> admin = [
@@ -127,18 +129,18 @@ class ClientNavigationState extends State<ClientNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: widget.privelege == Priveleges.student
+        body: privelege == Priveleges.student
             ? screensStudnets[currentIndex]
             : screens[currentIndex],
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: currentIndex,
           onTap: (value) => setState(() => currentIndex = value),
-          items: widget.privelege == Priveleges.admin
+          items: privelege == Priveleges.admin
               ? admin
-              : widget.privelege == Priveleges.av
+              : privelege == Priveleges.av
                   ? av
-                  : widget.privelege == Priveleges.teacher
+                  : privelege == Priveleges.teacher
                       ? teacher
                       : student,
         ));

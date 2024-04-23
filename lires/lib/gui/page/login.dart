@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lires/helpers/user_manager.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -28,7 +29,10 @@ class LoginState extends State<Login> {
                 "LiTec Raumreservierungs und Veranstaltungsverwaltungsystem"),
             const SizedBox(height: 20),
             ElevatedButton(
-                onPressed: () {}, child: const Text('Login mit Microsoft')),
+                onPressed: () {
+                  signIn();
+                },
+                child: const Text('Login mit Microsoft')),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -49,5 +53,19 @@ class LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  void signIn() async {
+    LoginResponse result = await UserManager.login(_rememberMe);
+    if (result.response) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, "/clientnavigation");
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.message)));
+      }
+    }
   }
 }

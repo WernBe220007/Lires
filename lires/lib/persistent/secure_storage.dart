@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:lires/structures/priveleges.dart';
 
 class UserSecureStorage {
   static const _storage = FlutterSecureStorage();
@@ -19,13 +20,13 @@ class UserSecureStorage {
   }
 
   static void setUserValues(dynamic apiUser, dynamic microsoftUser) {
-    UserSecureStorage.setUserLastname(microsoftUser["surname"]).toString();
+    UserSecureStorage.setUserLastname(microsoftUser["surname"].toString());
     UserSecureStorage.setUserFirstname(microsoftUser["givenName"].toString());
     UserSecureStorage.setUserEmail(microsoftUser["mail"].toString());
     UserSecureStorage.setUserOfficeLocation(
         microsoftUser["officeLocation"].toString());
     UserSecureStorage.setPrivileged(
-        (apiUser != null) ? apiUser["privileged"].toString() : "false");
+        (apiUser != null) ? apiUser["privileged"].toString() : "student");
   }
 
   static Future<Map<String, dynamic>> getUserValues() async {
@@ -33,14 +34,14 @@ class UserSecureStorage {
     var userFirstname = await UserSecureStorage.getUserFirstname();
     var userLastname = await UserSecureStorage.getUserLastname();
     var userOfficeLocation = await UserSecureStorage.getUserOfficeLocatione();
-    var privileged = await UserSecureStorage.getUserOfficeLocatione();
+    var privileged = await UserSecureStorage.getPrivileged();
 
     return Map.of({
       "email": userEmail ?? '',
       "firstname": userFirstname ?? '',
       "lastname": userLastname ?? '',
       "officeLocation": userOfficeLocation ?? '',
-      "privileged": (privileged == 'true') ? true : false
+      "privileged": (privileged == null) ? Priveleges.student : Priveleges.values[int.parse(privileged)],
     });
   }
 

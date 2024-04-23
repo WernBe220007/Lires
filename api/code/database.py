@@ -3,11 +3,17 @@ from sqlmodel import SQLModel, Session, create_engine, select, Field
 from pydantic import UUID4
 from typing import Optional
 from config import *
+from enum import Enum
 
 engine = create_engine(
     f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}/{POSTGRES_DB}"
 )
 
+class privelege(Enum):
+    admin = "admin"
+    av = "av"
+    teacher = "teacher"
+    student = "student"
 
 def create_db_uid():
     return str(uuid4())
@@ -20,6 +26,7 @@ class User(SQLModel, table=True):
     pref_name: str
     disabled: bool
     scopes_string: Optional[str] = Field("me", alias="scopes")
+    privelege_level: privelege = privelege.student
 
     @property
     def scopes(self) -> list[str]:
@@ -97,6 +104,28 @@ def clear_user_scopes(id: str):
         result = session.exec(statement)
         user = result.one()
         user.scopes = "me"
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user
+    
+def reset_user_privelege(id: str):
+    with Session(engine) as session:
+        statement = select(User).where(User.id == id)
+        result = session.exec(statement)
+        user = result.one()
+        user.privelege_level = privelege.student
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user
+
+def set_user_privelege(id: str, privelege_level: privelege):
+    with Session(engine) as session:
+        statement = select(User).where(User.id == id)
+        result = session.exec(statement)
+        user = result.one()
+        user.privelege_level = privelege_level
         session.add(user)
         session.commit()
         session.refresh(user)
