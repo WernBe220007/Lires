@@ -7,18 +7,27 @@ import 'package:lires/gui/page/login.dart';
 import 'package:lires/gui/clientnavigation.dart';
 import 'package:provider/provider.dart';
 import 'package:lires/structures/colorsprovider.dart';
+import 'package:lires/helpers/user_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppPreferences.init();
   late bool? rememberState;
+  //UserSecureStorage.deleteAll();
   rememberState = await UserSecureStorage.getRememberState() ?? false;
+  if (rememberState) {
+    UserManager.fromJson(await UserSecureStorage.getUserValues(), null);
+    if (!await UserManager.reloadUserData()) {
+      rememberState = false;
+    }
+  }
   runApp(Lires(
     rememberState: rememberState,
   ));
 }
 
 class LiResState extends ChangeNotifier {
+  static SnackBar? globalSnackbar;
   void updateListeners() {
     notifyListeners();
   }
@@ -27,9 +36,7 @@ class LiResState extends ChangeNotifier {
 class Lires extends StatelessWidget {
   static final navigatorKey = GlobalKey<NavigatorState>();
   final bool rememberState;
-  const Lires({
-    required this.rememberState,
-    super.key});
+  const Lires({required this.rememberState, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +84,9 @@ class Lires extends StatelessWidget {
           create: (context) => LiResState(),
         ),
       ],
-      child: MainPage(rememberState: rememberState,),
+      child: MainPage(
+        rememberState: rememberState,
+      ),
     );
   }
 }
@@ -99,15 +108,21 @@ class MainPageState extends State<MainPage> {
       return MaterialApp(
         title: 'Lires',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: colorMap[AppPreferences.getSelectedColorSync()] ?? Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: colorMap[AppPreferences.getSelectedColorSync()] ??
+                  Colors.deepOrange),
           useMaterial3: true,
         ),
         darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: colorMap[AppPreferences.getSelectedColorSync()] ?? Colors.deepOrange, brightness: Brightness.dark),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: colorMap[AppPreferences.getSelectedColorSync()] ??
+                  Colors.deepOrange,
+              brightness: Brightness.dark),
           useMaterial3: true,
           brightness: Brightness.dark,
         ),
-        themeMode:  AppPreferences.getDarkModeSync() ? ThemeMode.dark : ThemeMode.light,
+        themeMode:
+            AppPreferences.getDarkModeSync() ? ThemeMode.dark : ThemeMode.light,
         routes: routes,
         navigatorKey: widget.navigatorKey,
         //home: const SplashScreen(),
@@ -118,15 +133,21 @@ class MainPageState extends State<MainPage> {
     return MaterialApp(
       title: 'Lires',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: colorMap[AppPreferences.getSelectedColorSync()] ?? Colors.deepOrange),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: colorMap[AppPreferences.getSelectedColorSync()] ??
+                Colors.deepOrange),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: colorMap[AppPreferences.getSelectedColorSync()] ?? Colors.deepOrange, brightness: Brightness.dark),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: colorMap[AppPreferences.getSelectedColorSync()] ??
+                Colors.deepOrange,
+            brightness: Brightness.dark),
         useMaterial3: true,
         brightness: Brightness.dark,
       ),
-      themeMode:  AppPreferences.getDarkModeSync() ? ThemeMode.dark : ThemeMode.light,
+      themeMode:
+          AppPreferences.getDarkModeSync() ? ThemeMode.dark : ThemeMode.light,
       routes: routes,
       navigatorKey: widget.navigatorKey,
       //home: const SplashScreen(toLogin: true),

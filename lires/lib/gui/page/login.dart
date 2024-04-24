@@ -20,9 +20,13 @@ class LoginState extends State<Login> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Image(
-                image: const AssetImage('assets/LiTec_logo.webp'),
-                width: MediaQuery.of(context).size.width / 2),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height / 2),
+              child: const Image(
+                image: AssetImage('assets/LiTec_logo.webp'),
+                fit: BoxFit.scaleDown,
+              ),
+            ),
             const Spacer(),
             Text('Lires', style: Theme.of(context).textTheme.headlineLarge),
             const Text(

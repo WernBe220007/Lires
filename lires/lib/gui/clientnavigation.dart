@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lires/structures/priveleges.dart';
 import 'package:lires/helpers/user_manager.dart';
 import 'package:lires/gui/page/settings.dart';
+import 'package:lires/main.dart';
 
 class ClientNavigation extends StatefulWidget {
   const ClientNavigation({super.key});
@@ -18,6 +19,12 @@ class ClientNavigationState extends State<ClientNavigation> {
   void initState() {
     currentIndex = privelege == Priveleges.student ? 1 : 0;
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (LiResState.globalSnackbar != null) {
+        ScaffoldMessenger.of(context).showSnackBar(LiResState.globalSnackbar!);
+        LiResState.globalSnackbar = null;
+      }
+    });
   }
 
   final screens = [

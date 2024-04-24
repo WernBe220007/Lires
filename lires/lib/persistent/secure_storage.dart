@@ -1,8 +1,12 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:lires/logging.dart';
 import 'package:lires/structures/priveleges.dart';
 
 class UserSecureStorage {
-  static const _storage = FlutterSecureStorage();
+  static const _storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+    encryptedSharedPreferences: true,
+  ));
   static const _keyRememberState = 'state';
 
   static const _keyUserFirstname = 'firstname';
@@ -25,8 +29,9 @@ class UserSecureStorage {
     UserSecureStorage.setUserEmail(microsoftUser["mail"].toString());
     UserSecureStorage.setUserOfficeLocation(
         microsoftUser["officeLocation"].toString());
-    UserSecureStorage.setPrivileged(
-        (apiUser != null) ? apiUser["privileged"].toString() : "student");
+    UserSecureStorage.setPrivileged((apiUser != null)
+        ? apiUser["privelege_level"].toString()
+        : Priveleges.student.toString());
   }
 
   static Future<Map<String, dynamic>> getUserValues() async {
@@ -41,7 +46,8 @@ class UserSecureStorage {
       "firstname": userFirstname ?? '',
       "lastname": userLastname ?? '',
       "officeLocation": userOfficeLocation ?? '',
-      "privileged": (privileged == null) ? Priveleges.student : Priveleges.values[int.parse(privileged)],
+      "privelege_level":
+          (privileged == null) ? Priveleges.student.toString() : privileged,
     });
   }
 

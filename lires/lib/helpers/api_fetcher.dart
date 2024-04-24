@@ -39,6 +39,18 @@ class ServerApi {
     return expiryDate.isAfter(DateTime.now());
   }
 
+  static List<String> getTokenScopes(String token) {
+    var parts = token.split(".");
+    if (parts.length != 3) {
+      return [];
+    }
+    var payload = parts[1];
+    var payloadJson = json.decode(
+        ascii.decode(base64.decode(base64.normalize(payload))));
+    var scopes = payloadJson["scopes"];
+    return scopes != null ? List<String>.from(scopes) : [];
+  }
+
   static Future<Response> wrappedFetcher(String msIdToken, dynamic Function(String) fetcher) async {
     // Do we have an existing token and is it valid?
     if (bearerToken != null && checkTokenExpiry(bearerToken!)) {
@@ -46,9 +58,9 @@ class ServerApi {
     }
 
     // If not, authenticate and fetch
-    var response = await authenticate(msIdToken);
+    Response response = await authenticate(msIdToken);
     if (response.statusCode == 200) {
-      var token = json.decode(response.body)["access_token"];
+      String token = json.decode(response.body)["access_token"];
       bearerToken = token;
       return await fetcher(token);
     } else {

@@ -8,6 +8,8 @@ import 'package:http/http.dart';
 import 'package:lires/helpers/graph_fetcher.dart';
 import 'package:lires/logging.dart';
 import 'package:lires/helpers/api_fetcher.dart';
+import 'package:logger/logger.dart';
+import 'package:lires/main.dart';
 
 class UserManager {
   static String? _email;
@@ -40,7 +42,8 @@ class UserManager {
     _email = (microsoftUser == null) ? apiUser["email"] : microsoftUser["mail"];
     _priviliged = (apiUser == null)
         ? Priveleges.student
-        : Priveleges.values.firstWhere((e) => e.toString() == 'Priveleges.${apiUser["privelege_level"]}');
+        : Priveleges.values.firstWhere(
+            (e) => e.toString() == 'Priveleges.${apiUser["privelege_level"]}');
     _userFirstname = (microsoftUser == null)
         ? apiUser["firstname"]
         : microsoftUser["givenName"];
@@ -52,6 +55,26 @@ class UserManager {
         : microsoftUser["officeLocation"];
   }
 
+  static Future<bool> reloadUserData() async {
+    try {
+      String? token = await AadAuthentication.getOAuth()!.getIdToken();
+      Response response =
+          await ServerApi.wrappedFetcher(token!, ServerApi.getUserData);
+      Logging.logger.d(response.statusCode);
+      if (response.statusCode != 200) {
+        LiResState.globalSnackbar = SnackBar(content: Text("Fehler bei Kommunikation mit server: ${response.statusCode}"));
+        return GeneralConfig.ignoreServerConnection;
+      }
+      var apiJson = jsonDecode(response.body);
+      _priviliged = Priveleges.values.firstWhere(
+          (e) => e.toString() == 'Priveleges.${apiJson["privelege_level"]}');
+      return true;
+    } catch (e) {
+      LiResState.globalSnackbar = SnackBar(content: Text("Fehler bei Kommunikation mit server: $e"));
+      return GeneralConfig.ignoreServerConnection;
+    }
+  }
+
   static Future<void> logout(BuildContext context) async {
     UserSecureStorage.deleteAll();
     AadAuthentication.getOAuth()!.logout();
@@ -59,55 +82,54 @@ class UserManager {
   }
 
   static Future<LoginResponse> login(bool remember) async {
-    try {
-      await AadAuthentication.getOAuth()!.logout(); // log out of existing
-      await AadAuthentication.getOAuth()!.login(); // Start new login
-      String? accessToken =
-          await AadAuthentication.getOAuth()!.getAccessToken();
-      String? idToken = await AadAuthentication.getOAuth()!.getIdToken();
+    //try {
+    await AadAuthentication.getOAuth()!.logout(); // log out of existing
+    await AadAuthentication.getOAuth()!.login(); // Start new login
+    String? accessToken = await AadAuthentication.getOAuth()!.getAccessToken();
+    String? idToken = await AadAuthentication.getOAuth()!.getIdToken();
 
-      if (accessToken!.isEmpty || idToken!.isEmpty) {
-        return LoginResponse(false, "Failed to aquire token from microsoft");
-      } // Succesfully aquired token
-      Logging.logger.d("Access token: $accessToken");
-      Logging.logger.d("Id token: $idToken");
+    if (accessToken!.isEmpty || idToken!.isEmpty) {
+      return LoginResponse(false, "Failed to aquire token from microsoft");
+    } // Succesfully aquired token
+    Logging.logger.d("Access token: $accessToken");
+    Logging.logger.d("Id token: $idToken");
 
-      Response response = await GraphApi.getUserData(accessToken);
-      var jsonDecoded = jsonDecode(response.body);
-      Logging.logger.d(jsonDecoded);
+    Response response = await GraphApi.getUserData(accessToken);
+    var jsonDecoded = jsonDecode(response.body);
+    Logging.logger.d(jsonDecoded);
 
-      // Authenticate against API
-      Response apiResponse = await ServerApi.authenticate(idToken);
-      if (apiResponse.statusCode != 200) {
-        return LoginResponse(false, "Failed to authenticate with API");
-      }
-      var apiJson = jsonDecode(apiResponse.body);
-      String apiToken = apiJson["access_token"];
-      Logging.logger.d(apiJson);
-      Logging.logger.d("API token: $apiToken");
-
-      // Get user data from API
-      Response apiUserResponse = await ServerApi.getUserData(apiToken);
-      if (apiUserResponse.statusCode != 200) {
-        return LoginResponse(false, "Failed to get user data from API");
-      }
-      var apiUserJson = jsonDecode(apiUserResponse.body);
-      Logging.logger.d(apiUserJson);
-
-      // Save user data
-      ServerApi.bearerToken = apiToken;
-      UserManager.fromJson(apiUserJson, jsonDecoded);
-      if (remember) {
-        UserSecureStorage.setUserValues(apiUserJson, jsonDecoded);
-        UserSecureStorage.setRememberState(remember.toString());
-      } else {
-        UserSecureStorage.setRememberState(false.toString());
-      }
-      return LoginResponse(true, "Success");
-    } catch (e) {
-      Logging.logger.e(e.toString());
-      return LoginResponse(false, e.toString());
+    // Authenticate against API
+    Response apiResponse = await ServerApi.authenticate(idToken);
+    if (apiResponse.statusCode != 200) {
+      return LoginResponse(false, "Failed to authenticate with API");
     }
+    var apiJson = jsonDecode(apiResponse.body);
+    String apiToken = apiJson["access_token"];
+    Logging.logger.d(apiJson);
+    Logging.logger.d("API token: $apiToken");
+
+    // Get user data from API
+    Response apiUserResponse = await ServerApi.getUserData(apiToken);
+    if (apiUserResponse.statusCode != 200) {
+      return LoginResponse(false, "Failed to get user data from API");
+    }
+    var apiUserJson = jsonDecode(apiUserResponse.body);
+    Logging.logger.d(apiUserJson);
+
+    // Save user data
+    ServerApi.bearerToken = apiToken;
+    UserManager.fromJson(apiUserJson, jsonDecoded);
+    if (remember) {
+      UserSecureStorage.setUserValues(apiUserJson, jsonDecoded);
+      UserSecureStorage.setRememberState(remember.toString());
+    } else {
+      UserSecureStorage.setRememberState(false.toString());
+    }
+    return LoginResponse(true, "Success");
+    //} catch (e) {
+    //  Logging.logger.e(e.toString());
+    //  return LoginResponse(false, e.toString());
+    //}
   }
 }
 
