@@ -103,3 +103,32 @@ async def read_main():
     return {
         "msg": "Hello World",
     }
+
+
+# example query:
+# curl --insecure -X POST "https://localhost/api/trip/create" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"name\":\"Trip Name\",\"schoolyear\":\"2022\",\"startdate\":\"2022-01-01\",\"enddate\":\"2022-01-10\",\"disabled\":false}"
+@app.post("/api/trip/create")
+async def create_trip_ep(trip: Trip):
+    create_trip(
+        trip.name,
+        trip.schoolyear,
+        trip.startdate,
+        trip.enddate,
+        trip.disabled,
+    )
+    return {
+        "msg": "OK"
+    }
+
+# example query:
+# curl --insecure -X POST "https://localhost/api/trip/add_user" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user_id\":\"1\",\"trip_id\":\"1\"}"
+@app.post("/api/trip/add_user")
+async def add_user_to_trip_ep(user_trip_link: UserTripLink):
+    add_user_to_trip(user_trip_link.user_id, user_trip_link.trip_id)
+    return {
+        "msg": "OK"
+    }
+
+@app.get("/api/users/list")
+async def list_users():
+    return get_users()
