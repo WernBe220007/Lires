@@ -29,7 +29,7 @@ class GraphConfig {
 }
 
 class ApiConfig {
-  static const String uri = "https://192.168.98.161:8080/api/";
+  static const String uri = "https://192.168.98.195:8080/api/";
 }
 
 class GeneralConfig {
