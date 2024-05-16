@@ -88,9 +88,14 @@ class UserManager {
     String? accessToken = await AadAuthentication.getOAuth()!.getAccessToken();
     String? idToken = await AadAuthentication.getOAuth()!.getIdToken();
 
-    if (accessToken!.isEmpty || idToken!.isEmpty) {
+    if (accessToken == null || idToken == null) {
       return LoginResponse(false, "Failed to aquire token from microsoft");
     } // Succesfully aquired token
+
+    if (accessToken.isEmpty || idToken.isEmpty) {
+      return LoginResponse(false, "Failed to aquire token from microsoft");
+    } // Succesfully aquired token
+
     Logging.logger.d("Access token: $accessToken");
     Logging.logger.d("Id token: $idToken");
 

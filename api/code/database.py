@@ -45,6 +45,18 @@ class UserAccompanyingTripLink(SQLModel, table=True):
     user: "User" = Relationship(back_populates="accompanying_trip_links")
     trip: "Trip" = Relationship(back_populates="accompanying")
 
+class UserLeadingTripLink(SQLModel, table=True):
+    user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
+    trip_id: UUID4 = Field(foreign_key="trip.uid", primary_key=True)
+
+class UserResponisbleAVLink(SQLModel, table=True):
+    user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
+    trip_id: UUID4 = Field(foreign_key="trip.uid", primary_key=True)
+    acknowledged: bool = False
+
+    user: "User" = Relationship(back_populates="responsible_av_for_trips_links")
+    trip: "Trip" = Relationship(back_populates="responsible_avs")
+
 class User(SQLModel, table=True):
     uid: UUID4 = Field(default_factory=uuid4, primary_key=True)
     id: str = Field(default_factory=create_db_uid, unique=True, index=True)
@@ -56,8 +68,8 @@ class User(SQLModel, table=True):
     trip_links: list[UserTripLink] = Relationship(back_populates="user")
     effected_trip_links: list[UserEffectedTripLink] = Relationship(back_populates="user")
     accompanying_trip_links: list[UserAccompanyingTripLink] = Relationship(back_populates="user")
-    leading_trips: list["Trip"] = Relationship(back_populates="leader")
-    responsible_av_for_trips: list["Trip"] = Relationship(back_populates="responsible_av")
+    leading_trip_links: list["Trip"] = Relationship(back_populates="leaders", link_model=UserLeadingTripLink)
+    responsible_av_for_trips_links: list[UserResponisbleAVLink] = Relationship(back_populates="user")
 
     @property
     def scopes(self) -> list[str]:
@@ -77,11 +89,9 @@ class Trip(SQLModel, table=True):
     disabled: bool
     students: list[UserTripLink] = Relationship(back_populates="trip")
     effected_teachers: list[UserEffectedTripLink] = Relationship(back_populates="trip")
-    av_id: UUID4 = Field(foreign_key="user.id", default_factory=uuid4)
-    responsible_av: User = Relationship(back_populates="responsible_av_for_trips")
+    responsible_avs: list[UserResponisbleAVLink] = Relationship(back_populates="trip")
     accompanying: list[UserAccompanyingTripLink] = Relationship(back_populates="trip")
-    leader_id: UUID4 = Field(foreign_key="user.uid", default_factory=uuid4)
-    leader: User = Relationship(back_populates="leading_trips")
+    leaders: list[User] = Relationship(back_populates="leading_trip_links", link_model=UserLeadingTripLink)
     costs: bool
     costs_teacher: float
     costs_student: float
@@ -186,7 +196,7 @@ def set_user_privelege(id: str, privelege_level: privelege):
     
 def create_trip(name: str, schoolyear: datetime, startdate: datetime, enddate: datetime, disabled: bool):
     with Session(engine) as session:
-        trip = Trip(name=name, schoolyear=datetime.now(), startdate=datetime.now(), enddate=datetime.now(), disabled=disabled, students=[], effected_teachers=[], responsible_av=User(name="C", pref_name="D", disabled=False, scopes="me"), accompanying=[], leader=User(name="A", pref_name="B", disabled=False, scopes="me"), costs=False, costs_teacher=0, costs_student=0, costs_daily=0, costs_travel=0, costs_via_businesscard=False, costs_businesscard=False)
+        trip = Trip(name=name, schoolyear=datetime.now(), startdate=datetime.now(), enddate=datetime.now(), disabled=disabled, students=[], effected_teachers=[], responsible_avs=[], accompanying=[], leaders=[], costs=False, costs_teacher=0, costs_student=0, costs_daily=0, costs_travel=0, costs_via_businesscard=False, costs_businesscard=False)
         session.add(trip)
         session.commit()
         session.refresh(trip)
