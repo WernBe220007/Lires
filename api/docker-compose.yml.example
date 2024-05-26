@@ -1,0 +1,49 @@
+services:
+    api:
+        build: 
+            context: .
+        ports:
+            - 8080:8080
+        environment:
+            ACCESS_TOKEN_EXPIRE_MINUTES: 30
+            SECRET_KEY: 4810eb636b96664a31388d97b47e335c0708c4caf6d0e9fec9355e8b0883d9d8
+            ALGORITHM: HS256
+            ISSUER: https://lires.com/api/token
+            AUDIENCE: https://lires.com/api
+            MS_ISSUER: ISSUER
+            MS_AUDIENCE: AUDIENCE
+            MS_CACHE_EXPIRY: 3600
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_SERVER: postgres-api
+            POSTGRES_DB: postgres
+        volumes:
+            - ./ssl_cert.crt:/code/ssl_cert.crt
+            - ./ssl_key.key:/code/ssl_key.key
+        restart: unless-stopped
+        depends_on:
+            - postgres-api
+    postgres-api:
+        image: postgres:16
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: postgres
+        ports:
+            - 5432:5432
+        volumes:
+            - ./postgres_data:/var/lib/postgresql/data
+        restart: unless-stopped
+    nginx:
+        image: nginx:latest
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf:ro
+            - ./html:/usr/share/nginx/html:ro
+            - ./ssl_cert.crt:/etc/nginx/ssl/ssl_cert.crt:ro
+            - ./ssl_key.key:/etc/nginx/ssl/ssl_key.key:ro
+        depends_on:
+            - api
+        restart: unless-stopped
