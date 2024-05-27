@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lires/gui/page/overview.dart';
 import 'package:lires/structures/priveleges.dart';
 import 'package:lires/helpers/user_manager.dart';
 import 'package:lires/gui/page/settings.dart';
@@ -37,7 +38,7 @@ class ClientNavigationState extends State<ClientNavigation> {
 
   final screensStudnets = [
     const Placeholder(),
-    const Placeholder(),
+    const Overview(),
     const Settings(),
   ];
 

@@ -1,5 +1,4 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:lires/logging.dart';
 import 'package:lires/structures/priveleges.dart';
 
 class UserSecureStorage {

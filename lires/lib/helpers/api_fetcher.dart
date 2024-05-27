@@ -26,6 +26,24 @@ class ServerApi {
     });
   }
 
+  static Future<Response> getUserTrips(String token) async {
+    HttpClient client = HttpClient()..badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    var ioClient = IOClient(client);
+    return await ioClient.get(Uri.parse("${ApiConfig.uri}users/me/trips"), headers: {
+      HttpHeaders.authorizationHeader: "Bearer $token",
+      "Accept": "application/json"
+    });
+  }
+
+  static Future<Response> acknowledgeTrip(String token, String tripId) async {
+    HttpClient client = HttpClient()..badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    var ioClient = IOClient(client);
+    return await ioClient.post(Uri.parse("${ApiConfig.uri}users/me/trips/acknowledge"), headers: {
+      HttpHeaders.authorizationHeader: "Bearer $token",
+      "Accept": "application/json"
+    }, body: jsonEncode({"tripId": tripId}));
+  }
+
   static bool checkTokenExpiry(String token) {
     var parts = token.split(".");
     if (parts.length != 3) {
@@ -63,6 +81,23 @@ class ServerApi {
       String token = json.decode(response.body)["access_token"];
       bearerToken = token;
       return await fetcher(token);
+    } else {
+      throw Exception("Failed to authenticate with server");
+    }
+  }
+
+  static Future<Response> wrappedFetcherArgs(String msIdToken, dynamic Function(String, String) fetcher, String args) async {
+    // Do we have an existing token and is it valid?
+    if (bearerToken != null && checkTokenExpiry(bearerToken!)) {
+      return await fetcher(bearerToken!, args);
+    }
+
+    // If not, authenticate and fetch
+    Response response = await authenticate(msIdToken);
+    if (response.statusCode == 200) {
+      String token = json.decode(response.body)["access_token"];
+      bearerToken = token;
+      return await fetcher(token, args);
     } else {
       throw Exception("Failed to authenticate with server");
     }

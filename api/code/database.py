@@ -21,6 +21,7 @@ class privelege(Enum):
 def create_db_uid():
     return str(uuid4())
 
+
 class UserTripLink(SQLModel, table=True):
     user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
     trip_id: UUID4 = Field(foreign_key="trip.uid", primary_key=True)
@@ -28,6 +29,7 @@ class UserTripLink(SQLModel, table=True):
 
     user: "User" = Relationship(back_populates="trip_links")
     trip: "Trip" = Relationship(back_populates="students")
+
 
 class UserEffectedTripLink(SQLModel, table=True):
     user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
@@ -37,6 +39,7 @@ class UserEffectedTripLink(SQLModel, table=True):
     user: "User" = Relationship(back_populates="effected_trip_links")
     trip: "Trip" = Relationship(back_populates="effected_teachers")
 
+
 class UserAccompanyingTripLink(SQLModel, table=True):
     user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
     trip_id: UUID4 = Field(foreign_key="trip.uid", primary_key=True)
@@ -45,17 +48,21 @@ class UserAccompanyingTripLink(SQLModel, table=True):
     user: "User" = Relationship(back_populates="accompanying_trip_links")
     trip: "Trip" = Relationship(back_populates="accompanying")
 
+
 class UserLeadingTripLink(SQLModel, table=True):
     user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
     trip_id: UUID4 = Field(foreign_key="trip.uid", primary_key=True)
+
 
 class UserResponisbleAVLink(SQLModel, table=True):
     user_id: UUID4 = Field(foreign_key="user.uid", primary_key=True)
     trip_id: UUID4 = Field(foreign_key="trip.uid", primary_key=True)
     acknowledged: bool = False
+    comment: str
 
     user: "User" = Relationship(back_populates="responsible_av_for_trips_links")
     trip: "Trip" = Relationship(back_populates="responsible_avs")
+
 
 class User(SQLModel, table=True):
     uid: UUID4 = Field(default_factory=uuid4, primary_key=True)
@@ -66,14 +73,25 @@ class User(SQLModel, table=True):
     scopes_string: Optional[str] = Field("me", alias="scopes")
     privelege_level: privelege = privelege.student
     trip_links: list[UserTripLink] = Relationship(back_populates="user")
-    effected_trip_links: list[UserEffectedTripLink] = Relationship(back_populates="user")
-    accompanying_trip_links: list[UserAccompanyingTripLink] = Relationship(back_populates="user")
-    leading_trip_links: list["Trip"] = Relationship(back_populates="leaders", link_model=UserLeadingTripLink)
-    responsible_av_for_trips_links: list[UserResponisbleAVLink] = Relationship(back_populates="user")
+    effected_trip_links: list[UserEffectedTripLink] = Relationship(
+        back_populates="user"
+    )
+    accompanying_trip_links: list[UserAccompanyingTripLink] = Relationship(
+        back_populates="user"
+    )
+    leading_trip_links: list["Trip"] = Relationship(
+        back_populates="leaders", link_model=UserLeadingTripLink
+    )
+    responsible_av_for_trips_links: list[UserResponisbleAVLink] = Relationship(
+        back_populates="user"
+    )
 
     @property
     def scopes(self) -> list[str]:
-        return self.scopes_string.split(",") # pyright: ignore [reportOptionalMemberAccess]
+        return self.scopes_string.split(
+            ","
+        )  # pyright: ignore [reportOptionalMemberAccess]
+
     @scopes.setter
     def scopes(self, scopes: list[str]):
         self.scopes_string = ",".join(scopes)
@@ -83,15 +101,21 @@ class Trip(SQLModel, table=True):
     uid: UUID4 = Field(default_factory=uuid4, primary_key=True)
     id: str = Field(default_factory=create_db_uid, unique=True, index=True)
     name: str
+    description: str
+    schedule: str
     schoolyear: datetime
     startdate: datetime
+    startlocation: str
     enddate: datetime
+    endlocation: str
     disabled: bool
     students: list[UserTripLink] = Relationship(back_populates="trip")
     effected_teachers: list[UserEffectedTripLink] = Relationship(back_populates="trip")
     responsible_avs: list[UserResponisbleAVLink] = Relationship(back_populates="trip")
     accompanying: list[UserAccompanyingTripLink] = Relationship(back_populates="trip")
-    leaders: list[User] = Relationship(back_populates="leading_trip_links", link_model=UserLeadingTripLink)
+    leaders: list[User] = Relationship(
+        back_populates="leading_trip_links", link_model=UserLeadingTripLink
+    )
     costs: bool
     costs_teacher: float
     costs_student: float
@@ -99,10 +123,19 @@ class Trip(SQLModel, table=True):
     costs_travel: float
     costs_via_businesscard: bool
     costs_businesscard: bool
+    costs_when_cancelled: bool
+    jg_kl_responsible_costs_cancelled: bool
+    cancellation_insurance: bool
+    sga_congress_approved: datetime
+    agreement_with_pv_approved: datetime
+    supplemental_to: str
+
 
 def create_user(name: str, pref_name: str, disabled: bool):
     with Session(engine) as session:
-        user = User(name=name, pref_name=pref_name, disabled=disabled) # pyright: ignore [reportCallIssue]
+        user = User(
+            name=name, pref_name=pref_name, disabled=disabled
+        )  # pyright: ignore [reportCallIssue]
         session.add(user)
         session.commit()
         session.refresh(user)
@@ -171,7 +204,8 @@ def clear_user_scopes(id: str):
         session.commit()
         session.refresh(user)
         return user
-    
+
+
 def reset_user_privelege(id: str):
     with Session(engine) as session:
         statement = select(User).where(User.id == id)
@@ -183,6 +217,7 @@ def reset_user_privelege(id: str):
         session.refresh(user)
         return user
 
+
 def set_user_privelege(id: str, privelege_level: privelege):
     with Session(engine) as session:
         statement = select(User).where(User.id == id)
@@ -193,15 +228,51 @@ def set_user_privelege(id: str, privelege_level: privelege):
         session.commit()
         session.refresh(user)
         return user
-    
-def create_trip(name: str, schoolyear: datetime, startdate: datetime, enddate: datetime, disabled: bool):
+
+
+def create_trip(
+    name: str,
+    schoolyear: datetime,
+    startdate: datetime,
+    enddate: datetime,
+    disabled: bool,
+):
     with Session(engine) as session:
-        trip = Trip(name=name, schoolyear=datetime.now(), startdate=datetime.now(), enddate=datetime.now(), disabled=disabled, students=[], effected_teachers=[], responsible_avs=[], accompanying=[], leaders=[], costs=False, costs_teacher=0, costs_student=0, costs_daily=0, costs_travel=0, costs_via_businesscard=False, costs_businesscard=False)
+        trip = Trip(
+            name=name,
+            schoolyear=datetime.now(),
+            startdate=datetime.now(),
+            enddate=datetime.now(),
+            disabled=disabled,
+            students=[],
+            effected_teachers=[],
+            responsible_avs=[],
+            accompanying=[],
+            leaders=[],
+            costs=False,
+            costs_teacher=0,
+            costs_student=0,
+            costs_daily=0,
+            costs_travel=0,
+            costs_via_businesscard=False,
+            costs_businesscard=False,
+            costs_when_cancelled=False,
+            jg_kl_responsible_costs_cancelled=False,
+            cancellation_insurance=False,
+            sga_congress_approved=datetime.now(),
+            agreement_with_pv_approved=datetime.now(),
+            supplemental_to="",
+            description="",
+            schedule="",
+            startlocation="",
+            endlocation="",
+        )
         session.add(trip)
         session.commit()
         session.refresh(trip)
         return trip
-    
+
+
 def add_user_to_trip(user_id: str, trip_id: str):
     with Session(engine) as session:
         statement = select(User).where(User.id == user_id)
@@ -215,24 +286,35 @@ def add_user_to_trip(user_id: str, trip_id: str):
         session.commit()
         session.refresh(link)
         return link
-    
+
+
 def get_user_trips(user_id: str):
     with Session(engine) as session:
         statement = select(User).where(User.id == user_id)
         result = session.exec(statement)
         user = result.one()
-        return user.students
-    
+        # return trips objects
+        trips = []
+        for link in user.trip_links:
+            trips.append(link.trip)
+        return trips
+
+
 def get_trip_users(trip_id: str):
     with Session(engine) as session:
         statement = select(Trip).where(Trip.id == trip_id)
         result = session.exec(statement)
         trip = result.one()
         return trip.students
-    
+
+
 def acknowledge_trip(user_id: str, trip_id: str):
     with Session(engine) as session:
-        statement = select(UserTripLink).where(UserTripLink.user_id == user_id).where(UserTripLink.trip_id == trip_id)
+        statement = (
+            select(UserTripLink)
+            .where(UserTripLink.user_id == user_id)
+            .where(UserTripLink.trip_id == trip_id)
+        )
         result = session.exec(statement)
         link = result.one()
         link.acknowledged = True

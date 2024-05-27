@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lires/gui/page/login.dart';
 import 'package:lires/structures/priveleges.dart';
 import 'package:lires/persistent/secure_storage.dart';
 import 'dart:convert';
@@ -8,7 +7,6 @@ import 'package:http/http.dart';
 import 'package:lires/helpers/graph_fetcher.dart';
 import 'package:lires/logging.dart';
 import 'package:lires/helpers/api_fetcher.dart';
-import 'package:logger/logger.dart';
 import 'package:lires/main.dart';
 
 class UserManager {

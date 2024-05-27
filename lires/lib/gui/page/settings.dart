@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:lires/helpers/graph_fetcher.dart';
+import 'package:http/http.dart';
 import 'package:lires/helpers/user_manager.dart';
-import 'package:lires/logging.dart';
 import 'package:lires/persistent/app_preferences.dart';
 import 'package:lires/main.dart';
 import 'package:provider/provider.dart';
 import 'package:lires/structures/colorsprovider.dart';
 import 'package:lires/config.dart';
-import 'dart:convert';
 import 'package:lires/helpers/api_fetcher.dart';
+import 'package:lires/gui/component/profilePicture.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -31,6 +30,13 @@ class SettingsState extends State<Settings> {
     super.initState();
   }
 
+  Future<Response> fetchServer() async {
+    return await ServerApi.wrappedFetcher(
+        await AadAuthentication.getOAuth()!.getIdToken() ?? "",
+        ServerApi.getUserTrips);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<LiResState>();
@@ -43,48 +49,41 @@ class SettingsState extends State<Settings> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width / 3,),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (MediaQuery.of(context).size.width <= 600)
+                          const ProfilePicture(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
+                            if (MediaQuery.of(context).size.width > 600)
+                              const ProfilePicture(),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                     "${UserManager.getUserFirstname() ?? 'Unbekannt'} ${UserManager.getUserLastname() ?? 'Unbekannt'}",
                                     style:
-                                        Theme.of(context).textTheme.bodyLarge),
+                                        Theme.of(context).textTheme.bodyLarge, overflow: TextOverflow.ellipsis),
                                 Text(
-                                    "Email: ${UserManager.getEmail() ?? 'Unbekannt'}"),
+                                    "Email: ${UserManager.getEmail() ?? 'Unbekannt'}", overflow: TextOverflow.ellipsis,),
                                 Text(
-                                    "Rolle: ${UserManager.getPrivileged().toString().split(".")[1]}",
+                                    "Rolle: ${UserManager.getPrivileged().toString().split(".")[1]}", overflow:  TextOverflow.ellipsis,
                                     style:
                                         Theme.of(context).textTheme.bodyLarge),
                                 Text(
                                     "Raum: ${UserManager.getUserOfficeLocation() ?? 'Unbekannt'}",
                                     style:
-                                        Theme.of(context).textTheme.bodyLarge),
+                                        Theme.of(context).textTheme.bodyLarge, overflow: TextOverflow.ellipsis),
                               ],
                             ),
-                          ],
-                        ),
-                        ExpansionTile(
-                          title: const Text("Erweitert"),
-                          children: [
-                            Text("Token: ${ServerApi.bearerToken ?? "Kein Token"}"),
-                            const Text("Scopes:"),
-                            Wrap(
-                              children: ServerApi.getTokenScopes(ServerApi.bearerToken ?? "")
-                                  .map((scope) => Chip(label: Text(scope)))
-                                  .toList(),
-                            )
                           ],
                         ),
                       ],
@@ -92,7 +91,7 @@ class SettingsState extends State<Settings> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20), 
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -160,13 +159,44 @@ class SettingsState extends State<Settings> {
                             ));
                   },
                   child: const Text('Zurücksetzen')),
-              const SizedBox(height: 40,),
+              const SizedBox(
+                height: 40,
+              ),
               FilledButton(
                   onPressed: () {
                     UserManager.logout(context);
                   },
                   child: const Text('Logout')),
               const SizedBox(height: 20),
+              ExpansionTile(
+                title: const Text("Erweitert"),
+                children: [
+                  Text("Token: ${ServerApi.bearerToken ?? "Kein Token"}"),
+                  const Text("Scopes:"),
+                  Wrap(
+                    children:
+                        ServerApi.getTokenScopes(ServerApi.bearerToken ?? "")
+                            .map((scope) => Chip(label: Text(scope)))
+                            .toList(),
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
+              FutureBuilder<Response>(
+                future: fetchServer(),
+                builder:
+                    (BuildContext context, AsyncSnapshot<Response> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else {
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return Text('Loaded: ${snapshot.data!.body.toString()}');
+                    }
+                  }
+                },
+              ),
             ],
           ),
         ),

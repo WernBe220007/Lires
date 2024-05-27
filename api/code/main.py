@@ -91,11 +91,11 @@ async def read_users_me(
     return current_user
 
 
-@app.get("/api/users/me/items/", tags=["users"])
+@app.get("/api/users/me/trips/", tags=["users"])
 async def read_own_items(
-    current_user: Annotated[User, Security(get_current_active_user, scopes=["items"])],
+    current_user: Annotated[User, Security(get_current_active_user, scopes=["me"])],
 ):
-    return [{"item_id": "Foo", "owner": current_user.id}]
+    return get_user_trips(current_user.id)
 
 
 @app.get("/api/")
@@ -116,19 +116,23 @@ async def create_trip_ep(trip: Trip):
         trip.enddate,
         trip.disabled,
     )
-    return {
-        "msg": "OK"
-    }
+    return {"msg": "OK"}
+
 
 # example query:
 # curl --insecure -X POST "https://localhost/api/trip/add_user" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user_id\":\"1\",\"trip_id\":\"1\"}"
 @app.post("/api/trip/add_user")
 async def add_user_to_trip_ep(user_trip_link: UserTripLink):
     add_user_to_trip(user_trip_link.user_id, user_trip_link.trip_id)
-    return {
-        "msg": "OK"
-    }
+    return {"msg": "OK"}
 
-@app.get("/api/users/list")
-async def list_users():
-    return get_users()
+
+# example query:
+# curl --insecure -X POST "https://localhost/api/trip/acknowledge" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"trip_id\":\"1\"}"
+@app.post("/api/users/me/trips/acknowledge")
+async def acknowledge_my_trip(
+    trip_id: str,
+    user_id: Annotated[str, Security(get_current_user, scopes=["me"])],
+):
+    acknowledge_trip(trip_id, user_id)
+    return {"msg": "OK"}

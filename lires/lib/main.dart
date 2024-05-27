@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lires/persistent/app_preferences.dart';
 import 'package:lires/persistent/secure_storage.dart';
 import 'package:lires/routes.dart';
-import 'package:lires/gui/splashscreen.dart';
 import 'package:lires/gui/page/login.dart';
 import 'package:lires/gui/clientnavigation.dart';
 import 'package:provider/provider.dart';
