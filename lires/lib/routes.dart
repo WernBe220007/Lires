@@ -5,6 +5,7 @@ import 'package:lires/gui/page/login.dart';
 final Map<String, WidgetBuilder> routes = {
   "/clientnavigation": (context) => const ClientNavigation(),
   "/login": (context) => const Login(),
+  "/newtrip": (context) => const Placeholder(),
 };
 
 

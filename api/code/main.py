@@ -128,11 +128,11 @@ async def add_user_to_trip_ep(user_trip_link: UserTripLink):
 
 
 # example query:
-# curl --insecure -X POST "https://localhost/api/trip/acknowledge" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"trip_id\":\"1\"}"
-@app.post("/api/users/me/trips/acknowledge")
+# curl --insecure -X POST "https://localhost/api/trip/acknowledge?trip_id=1" -H  "accept: application/json" -H  "Content-Type: application/json"
+@app.get("/api/users/me/trips/acknowledge")
 async def acknowledge_my_trip(
     trip_id: str,
-    user_id: Annotated[str, Security(get_current_user, scopes=["me"])],
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    acknowledge_trip(trip_id, user_id)
+    acknowledge_trip(current_user.uid, trip_id)
     return {"msg": "OK"}

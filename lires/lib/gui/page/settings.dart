@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:lires/structures/colorsprovider.dart';
 import 'package:lires/config.dart';
 import 'package:lires/helpers/api_fetcher.dart';
-import 'package:lires/gui/component/profilePicture.dart';
+import 'package:lires/gui/component/profile_picture.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});

@@ -4,6 +4,7 @@ import 'package:lires/structures/priveleges.dart';
 import 'package:lires/helpers/user_manager.dart';
 import 'package:lires/gui/page/settings.dart';
 import 'package:lires/main.dart';
+import 'package:lires/gui/page/requests.dart';
 
 class ClientNavigation extends StatefulWidget {
   const ClientNavigation({super.key});
@@ -29,15 +30,15 @@ class ClientNavigationState extends State<ClientNavigation> {
   }
 
   final screens = [
+    const Overview(),
     const Placeholder(),
-    const Placeholder(),
-    const Placeholder(),
+    const ReqestsView(),
     const Settings(),
     const Placeholder()
   ];
 
   final screensStudnets = [
-    const Placeholder(),
+    const ReqestsView(),
     const Overview(),
     const Settings(),
   ];

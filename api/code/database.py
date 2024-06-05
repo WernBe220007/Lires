@@ -130,6 +130,8 @@ class Trip(SQLModel, table=True):
     agreement_with_pv_approved: datetime
     supplemental_to: str
 
+    acknowledged: bool = False # Set by function reading the link
+
 
 def create_user(name: str, pref_name: str, disabled: bool):
     with Session(engine) as session:
@@ -296,7 +298,9 @@ def get_user_trips(user_id: str):
         # return trips objects
         trips = []
         for link in user.trip_links:
-            trips.append(link.trip)
+            current_trip = link.trip
+            current_trip.acknowledged = link.acknowledged
+            trips.append(current_trip)
         return trips
 
 
@@ -308,12 +312,17 @@ def get_trip_users(trip_id: str):
         return trip.students
 
 
-def acknowledge_trip(user_id: str, trip_id: str):
+def acknowledge_trip(user_uid: UUID4, trip_id: str):
     with Session(engine) as session:
+        statement = select(Trip).where(Trip.id == trip_id)
+        result = session.exec(statement)
+        trip = result.one()
+        trip_uid: UUID4 = trip.uid
+
         statement = (
             select(UserTripLink)
-            .where(UserTripLink.user_id == user_id)
-            .where(UserTripLink.trip_id == trip_id)
+            .where(UserTripLink.user_id == user_uid)
+            .where(UserTripLink.trip_id == trip_uid)
         )
         result = session.exec(statement)
         link = result.one()

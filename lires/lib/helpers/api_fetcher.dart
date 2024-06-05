@@ -38,10 +38,10 @@ class ServerApi {
   static Future<Response> acknowledgeTrip(String token, String tripId) async {
     HttpClient client = HttpClient()..badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
     var ioClient = IOClient(client);
-    return await ioClient.post(Uri.parse("${ApiConfig.uri}users/me/trips/acknowledge"), headers: {
+    return await ioClient.get(Uri.parse("${ApiConfig.uri}users/me/trips/acknowledge?trip_id=$tripId"), headers: {
       HttpHeaders.authorizationHeader: "Bearer $token",
       "Accept": "application/json"
-    }, body: jsonEncode({"tripId": tripId}));
+    });
   }
 
   static bool checkTokenExpiry(String token) {
