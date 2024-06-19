@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lires/gui/clientnavigation.dart';
 import 'package:lires/gui/page/login.dart';
+import 'package:lires/gui/page/create.dart';
 
 final Map<String, WidgetBuilder> routes = {
   "/clientnavigation": (context) => const ClientNavigation(),
   "/login": (context) => const Login(),
-  "/newtrip": (context) => const Placeholder(),
+  "/new": (context) => const CreateWizard(),
 };
 
 

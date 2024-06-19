@@ -33,7 +33,7 @@ class OverviewState extends State<Overview> {
         floatingActionButton: privelege != Priveleges.student
             ? FloatingActionButton(
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/newtrip');
+                  Navigator.of(context).pushNamed('/new');
                 },
                 child: const Icon(Icons.add),
               )
