@@ -136,3 +136,9 @@ async def acknowledge_my_trip(
 ):
     acknowledge_trip(current_user.uid, trip_id)
     return {"msg": "OK"}
+
+# example query:
+# curl --insecure -X GET "https://localhost/api/users/list" -H  "accept: application/json"
+@app.get("/api/users/list")
+async def list_users():
+    return get_users()

@@ -44,6 +44,15 @@ class ServerApi {
     });
   }
 
+  static Future<Response> getUsers() async {
+    HttpClient client = HttpClient()..badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    var ioClient = IOClient(client);
+    return await ioClient.get(Uri.parse("${ApiConfig.uri}users/list"), headers: {
+      HttpHeaders.authorizationHeader: "Bearer $bearerToken",
+      "Accept": "application/json"
+    });
+  }
+
   static bool checkTokenExpiry(String token) {
     var parts = token.split(".");
     if (parts.length != 3) {
